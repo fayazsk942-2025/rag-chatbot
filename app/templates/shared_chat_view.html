@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shared Chat · RAG.ai</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&family=Poppins:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        /* --- RESET & BASE --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0B1020;
+            color: #F8FAFC;
+            font-family: 'Inter', 'Poppins', 'Space Grotesk', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1.5rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Neural bg canvas */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* --- MAIN CONTAINER --- */
+        .shared-container {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+
+        /* --- HEADER --- */
+        .shared-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 0.5rem 0;
+        }
+
+        .shared-header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #6366F1, #8B5CF6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-text {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.4rem;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #6366F1, #8B5CF6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-text span {
+            font-weight: 300;
+            color: #94A3B8;
+            -webkit-text-fill-color: #94A3B8;
+        }
+
+        .shared-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 1.2rem;
+            border-radius: 40px;
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.1);
+            font-size: 0.8rem;
+            color: #A5B4FC;
+            font-weight: 500;
+        }
+
+        .shared-badge i {
+            color: #06B6D4;
+        }
+
+        .back-link {
+            color: #94A3B8;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.2s;
+            padding: 0.4rem 1rem;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .back-link:hover {
+            color: #F8FAFC;
+            border-color: rgba(99, 102, 241, 0.15);
+            background: rgba(99, 102, 241, 0.04);
+        }
+
+        /* --- GLASS CARD --- */
+        .chat-card {
+            background: rgba(11, 16, 32, 0.45);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            box-shadow: 0 20px 60px -20px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(99, 102, 241, 0.06);
+            overflow: hidden;
+            padding: 2rem 2rem 0;
+        }
+
+        /* --- CHAT HEADER INSIDE CARD --- */
+        .chat-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 1.2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        .chat-card-header .chat-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: #F8FAFC;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .chat-card-header .chat-title i {
+            color: #6366F1;
+        }
+
+        .chat-card-header .chat-meta {
+            font-size: 0.8rem;
+            color: #64748B;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .chat-card-header .chat-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .chat-card-header .chat-meta .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #10B981;
+            display: inline-block;
+        }
+
+        /* --- CHAT BOX (messages) --- */
+        .chat-box {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            max-height: 65vh;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+            padding-bottom: 1.5rem;
+        }
+
+        .chat-box::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chat-box::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .chat-box::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.2);
+            border-radius: 10px;
+        }
+
+        /* --- MESSAGE BUBBLES --- */
+        .message {
+            display: flex;
+            width: 100%;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            0% { opacity: 0; transform: translateY(12px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.bot {
+            justify-content: flex-start;
+        }
+
+        /* Avatar */
+        .message-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 14px;
+            margin: 0 12px;
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #6366F1, #8B5CF6);
+            color: #fff;
+            order: 1;
+            margin: 0 0 0 12px;
+        }
+
+        .message.bot .message-avatar {
+            background: rgba(99, 102, 241, 0.1);
+            color: #6366F1;
+            border: 1px solid rgba(99, 102, 241, 0.1);
+            margin: 0 12px 0 0;
+        }
+
+        /* Bubble */
+        .message .bubble {
+            max-width: 78%;
+            padding: 14px 20px;
+            border-radius: 20px;
+            line-height: 1.7;
+            font-size: 15px;
+            word-break: break-word;
+            position: relative;
+        }
+
+        .message.user .bubble {
+            background: linear-gradient(145deg, #6366F1, #8B5CF6);
+            color: #fff;
+            border-bottom-right-radius: 6px;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15);
+        }
+
+        .message.bot .bubble {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            color: #F8FAFC;
+            border-bottom-left-radius: 6px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .message .bubble .message-text {
+            margin: 0;
+        }
+
+        .message .bubble .message-text p {
+            margin-bottom: 0.5rem;
+        }
+
+        .message .bubble .message-text p:last-child {
+            margin-bottom: 0;
+        }
+
+        .message .bubble .message-meta {
+            font-size: 10px;
+            opacity: 0.35;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+
+        .message.user .bubble .message-meta {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .message.bot .bubble .message-meta {
+            color: #94A3B8;
+        }
+
+        /* Role label (small) */
+        .message .role-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            opacity: 0.3;
+            margin-bottom: 2px;
+            display: block;
+        }
+
+        .message.user .role-label {
+            text-align: right;
+            color: #A5B4FC;
+        }
+
+        .message.bot .role-label {
+            color: #94A3B8;
+        }
+
+        /* --- FOOTER --- */
+        .shared-footer {
+            text-align: center;
+            padding: 1.5rem 0 1rem;
+            color: #475569;
+            font-size: 0.75rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.02);
+            margin-top: 0.5rem;
+        }
+
+        .shared-footer i {
+            color: #6366F1;
+            opacity: 0.3;
+        }
+
+        .shared-footer a {
+            color: #6366F1;
+            text-decoration: none;
+        }
+
+        .shared-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* --- EMPTY STATE --- */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #94A3B8;
+        }
+
+        .empty-state .empty-icon {
+            font-size: 4rem;
+            color: #6366F1;
+            opacity: 0.15;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .empty-state h3 {
+            color: #F8FAFC;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem;
+            }
+
+            .chat-card {
+                padding: 1.2rem 1rem 0;
+                border-radius: 24px;
+            }
+
+            .shared-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .shared-header-left {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .message .bubble {
+                max-width: 92%;
+                font-size: 14px;
+                padding: 12px 16px;
+            }
+
+            .message-avatar {
+                width: 28px;
+                height: 28px;
+                font-size: 12px;
+                margin: 0 8px;
+            }
+
+            .message.user .message-avatar {
+                margin: 0 0 0 8px;
+            }
+
+            .message.bot .message-avatar {
+                margin: 0 8px 0 0;
+            }
+
+            .chat-card-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.4rem;
+            }
+
+            .chat-card-header .chat-title {
+                font-size: 1rem;
+            }
+
+            .chat-box {
+                max-height: 55vh;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .chat-card {
+                padding: 0.8rem 0.6rem 0;
+                border-radius: 18px;
+            }
+
+            .message .bubble {
+                font-size: 13px;
+                padding: 10px 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Neural Background Canvas -->
+    <canvas id="bg-canvas" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none;"></canvas>
+
+    <div class="shared-container">
+        <!-- Header -->
+        <header class="shared-header">
+            <div class="shared-header-left">
+                <div class="logo-icon"><i class="fas fa-brain"></i></div>
+                <span class="logo-text">RAG<span>.</span>ai</span>
+                <span class="shared-badge">
+                    <i class="fas fa-share-alt"></i> Shared
+                </span>
+            </div>
+            <a href="{% url 'home' %}" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </header>
+
+        <!-- Chat Card -->
+        <div class="chat-card">
+            <!-- Card Header -->
+            <div class="chat-card-header">
+                <div class="chat-title">
+                    <i class="fas fa-comment-dots"></i>
+                    {% if chat_title %}
+                        {{ chat_title }}
+                    {% else %}
+                        Shared Conversation
+                    {% endif %}
+                </div>
+                <div class="chat-meta">
+                    <span><span class="dot"></span> {{ messages|length }} messages</span>
+                    <span>·</span>
+                    <span><i class="far fa-clock"></i> Shared</span>
+                </div>
+            </div>
+
+            <!-- Chat Box -->
+            <div class="chat-box" id="chatBox">
+                {% if messages %}
+                    {% for msg in messages %}
+                        <div class="message {% if msg.role == 'user' %}user{% else %}bot{% endif %}">
+                            {% if msg.role == 'user' %}
+                            <div class="message-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="bubble">
+                                <span class="role-label">You</span>
+                                <div class="message-text">
+                                    {{ msg.message|linebreaks }}
+                                </div>
+                                <div class="message-meta">
+                                    <span>just now</span>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="message-avatar">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <div class="bubble">
+                                <span class="role-label">AI</span>
+                                <div class="message-text">
+                                    {{ msg.message|linebreaks }}
+                                </div>
+                                <div class="message-meta">
+                                    <span>AI</span>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <span class="empty-icon"><i class="fas fa-inbox"></i></span>
+                        <h3>No messages yet</h3>
+                        <p>This shared conversation is empty.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Footer -->
+            <div class="shared-footer">
+                <i class="fas fa-lock" style="margin-right:0.3rem;"></i>
+                Shared via RAG.ai ·
+                <a href="#">Learn more</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Canvas Neural Network Script -->
+    <script>
+        (function() {
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let particles = [];
+
+            function resize() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            const NUM = 55;
+            for (let i = 0; i < NUM; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    r: Math.random() * 2.2 + 1,
+                    alpha: Math.random() * 0.25 + 0.05,
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, width, height);
+
+                for (let p of particles) {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > width) p.vx *= -1;
+                    if (p.y < 0 || p.y > height) p.vy *= -1;
+                }
+
+                // connections
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
+                        if (dist < 140) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(99, 102, 241, ${0.05 * (1 - dist/140)})`;
+                            ctx.lineWidth = 0.6;
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                // nodes
+                for (let p of particles) {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(139, 92, 246, ${p.alpha})`;
+                    ctx.shadowColor = '#6366F1';
+                    ctx.shadowBlur = 6;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+    </script>
+
+    <!-- Auto-scroll to bottom -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatBox = document.getElementById('chatBox');
+            if (chatBox) {
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Profile · RAG.ai</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&family=Poppins:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        /* --- RESET & BASE --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0B1020;
+            color: #F8FAFC;
+            font-family: 'Inter', 'Poppins', 'Space Grotesk', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Neural bg canvas */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* main card */
+        .profile-wrapper {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        /* glassmorphism card */
+        .glass-card {
+            background: rgba(11, 16, 32, 0.55);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border-radius: 40px;
+            padding: 2.8rem 2.2rem 2.4rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(99, 102, 241, 0.12);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 40px 80px -20px rgba(99, 102, 241, 0.15), 0 0 0 1px rgba(139, 92, 246, 0.2);
+        }
+
+        /* header */
+        .profile-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .profile-header .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: #94A3B8;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+            margin-bottom: 0.8rem;
+        }
+
+        .profile-header .back-link:hover {
+            color: #6366F1;
+        }
+
+        .profile-header h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 2.2rem;
+            letter-spacing: -0.02em;
+            background: linear-gradient(to right, #F8FAFC 60%, #94A3B8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* avatar - FIXED: proper sizing and containment */
+        .avatar-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .avatar-wrapper {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid rgba(99, 102, 241, 0.2);
+            box-shadow: 0 0 40px rgba(99, 102, 241, 0.08);
+            flex-shrink: 0;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .avatar-wrapper:hover {
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 0 60px rgba(99, 102, 241, 0.15);
+            transform: scale(1.02);
+        }
+
+        .avatar-wrapper img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            display: block !important;
+        }
+
+        .avatar-wrapper .avatar-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.05));
+            color: #6366F1;
+            font-size: 4rem;
+        }
+
+        /* upload form */
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            width: 100%;
+            padding: 0.8rem 1.2rem;
+            border-radius: 40px;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.02);
+            color: #94A3B8;
+            font-size: 0.9rem;
+            transition: all 0.25s ease;
+            cursor: pointer;
+        }
+
+        .file-input-label:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            background: rgba(255, 255, 255, 0.04);
+            color: #F8FAFC;
+        }
+
+        .file-input-label i {
+            color: #6366F1;
+        }
+
+        .btn-upload {
+            width: 100%;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 40px;
+            background: linear-gradient(145deg, #6366F1, #8B5CF6);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+        }
+
+        .btn-upload:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 32px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-upload:active {
+            transform: scale(0.98);
+        }
+
+        /* divider */
+        .divider {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.05), transparent);
+            margin: 1.5rem 0;
+        }
+
+        /* user info */
+        .info-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 1rem;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transition: background 0.2s;
+        }
+
+        .info-row:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .info-label {
+            color: #94A3B8;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-label i {
+            color: #6366F1;
+            width: 20px;
+            text-align: center;
+        }
+
+        .info-value {
+            color: #F8FAFC;
+            font-weight: 500;
+            font-size: 0.95rem;
+            word-break: break-word;
+            text-align: right;
+            max-width: 60%;
+        }
+
+        /* floating particles */
+        .micro-particle {
+            position: fixed;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.06);
+            pointer-events: none;
+            z-index: 0;
+            animation: floatParticle linear infinite;
+        }
+
+        @keyframes floatParticle {
+            0% { transform: translateY(100vh) scale(0.2); opacity: 0; }
+            20% { opacity: 0.5; }
+            80% { opacity: 0.5; }
+            100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+        }
+
+        /* responsive */
+        @media (max-width: 520px) {
+            .glass-card { padding: 1.8rem 1.2rem; }
+            .profile-header h1 { font-size: 1.6rem; }
+            .avatar-wrapper { width: 100px; height: 100px; }
+            .info-row { flex-direction: column; align-items: flex-start; gap: 0.3rem; }
+            .info-value { max-width: 100%; text-align: left; }
+        }
+
+        @media (max-width: 380px) {
+            .glass-card { padding: 1.2rem 0.8rem; border-radius: 28px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Neural bg canvas -->
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="profile-wrapper">
+        <div class="glass-card">
+            <!-- Header -->
+            <div class="profile-header">
+                <a href="{% url 'home' %}" class="back-link">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+                <h1>Your Profile</h1>
+            </div>
+
+            <!-- Avatar -->
+            <div class="avatar-section">
+                <div class="avatar-wrapper">
+                    {% if profile.image %}
+                        <img src="{{ profile.image.url }}" alt="{{ request.user.username }}" />
+                    {% else %}
+                        <div class="avatar-placeholder">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Upload Form -->
+                <form method="POST" enctype="multipart/form-data" class="upload-form">
+                    {% csrf_token %}
+                    <div class="file-input-wrapper">
+                        <input type="file" name="image" id="image-upload" accept="image/*" />
+                        <label for="image-upload" class="file-input-label">
+                            <i class="fas fa-cloud-upload-alt"></i> Choose photo
+                        </label>
+                    </div>
+                    <button type="submit" class="btn-upload">
+                        <i class="fas fa-upload"></i> Upload Photo
+                    </button>
+                </form>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- User Info -->
+            <div class="info-grid">
+                <div class="info-row">
+                    <span class="info-label"><i class="fas fa-user"></i> Username</span>
+                    <span class="info-value">{{ request.user.username }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label"><i class="fas fa-user-tag"></i> First Name</span>
+                    <span class="info-value">{{ request.user.first_name|default:"—" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label"><i class="fas fa-user-tag"></i> Last Name</span>
+                    <span class="info-value">{{ request.user.last_name|default:"—" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label"><i class="fas fa-envelope"></i> Email</span>
+                    <span class="info-value">{{ request.user.email }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Canvas Neural Network Script -->
+    <script>
+        (function() {
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let particles = [];
+
+            function resize() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            const NUM = 55;
+            for (let i = 0; i < NUM; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    vx: (Math.random() - 0.5) * 0.35,
+                    vy: (Math.random() - 0.5) * 0.35,
+                    r: Math.random() * 2.2 + 1,
+                    alpha: Math.random() * 0.3 + 0.06,
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, width, height);
+
+                for (let p of particles) {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > width) p.vx *= -1;
+                    if (p.y < 0 || p.y > height) p.vy *= -1;
+                }
+
+                // connections
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
+                        if (dist < 130) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(99, 102, 241, ${0.06 * (1 - dist/130)})`;
+                            ctx.lineWidth = 0.7;
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                // nodes
+                for (let p of particles) {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(139, 92, 246, ${p.alpha})`;
+                    ctx.shadowColor = '#6366F1';
+                    ctx.shadowBlur = 8;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+    </script>
+
+    <!-- Floating micro-particles -->
+    <script>
+        (function() {
+            const container = document.body;
+            for (let i = 0; i < 20; i++) {
+                const el = document.createElement('div');
+                el.className = 'micro-particle';
+                el.style.left = Math.random() * 100 + '%';
+                el.style.animationDuration = (18 + Math.random() * 30) + 's';
+                el.style.animationDelay = (Math.random() * 25) + 's';
+                const size = 2 + Math.random() * 6;
+                el.style.width = size + 'px';
+                el.style.height = size + 'px';
+                el.style.background = `rgba(99, 102, 241, ${0.04 + Math.random() * 0.06})`;
+                container.appendChild(el);
+            }
+        })();
+    </script>
+</body>
+</html>

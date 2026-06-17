@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Login · RAG.ai</title>
+    <!-- Google Fonts: Inter, Poppins, Space Grotesk -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&family=Poppins:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        /* --- RESET & BASE --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0B1020;
+            color: #F8FAFC;
+            font-family: 'Inter', 'Poppins', 'Space Grotesk', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* animated bg canvas (neural network) */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* main card */
+        .login-wrapper {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 440px;
+            margin: 0 auto;
+        }
+
+        /* glassmorphism card */
+        .glass-card {
+            background: rgba(11, 16, 32, 0.55);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border-radius: 40px;
+            padding: 2.8rem 2.2rem 2.4rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(99, 102, 241, 0.12);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 40px 80px -20px rgba(99, 102, 241, 0.15), 0 0 0 1px rgba(139, 92, 246, 0.2);
+        }
+
+        /* header */
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-header .logo-icon {
+            font-size: 2.8rem;
+            background: linear-gradient(135deg, #6366F1, #8B5CF6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: inline-block;
+            margin-bottom: 0.3rem;
+        }
+
+        .auth-header h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 2rem;
+            letter-spacing: -0.02em;
+            background: linear-gradient(to right, #F8FAFC 60%, #94A3B8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-top: 0.2rem;
+        }
+
+        .auth-header p {
+            color: #94A3B8;
+            font-size: 0.95rem;
+            margin-top: 0.3rem;
+            font-weight: 400;
+        }
+
+        /* form */
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.25s ease;
+        }
+
+        .input-group:focus-within {
+            border-color: #6366F1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .input-group i {
+            color: #94A3B8;
+            font-size: 1rem;
+            width: 44px;
+            text-align: center;
+            transition: color 0.2s;
+        }
+
+        .input-group:focus-within i {
+            color: #6366F1;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 0.9rem 1rem 0.9rem 0;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #F8FAFC;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+
+        .input-group input::placeholder {
+            color: #64748B;
+            font-weight: 300;
+            font-size: 0.9rem;
+        }
+
+        .input-group input:-webkit-autofill {
+            -webkit-box-shadow: 0 0 0 30px #0B1020 inset !important;
+            -webkit-text-fill-color: #F8FAFC !important;
+        }
+
+        /* submit button */
+        .btn-submit {
+            width: 100%;
+            padding: 0.9rem;
+            border: none;
+            border-radius: 40px;
+            background: linear-gradient(145deg, #6366F1, #8B5CF6);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            margin-top: 0.5rem;
+        }
+
+        .btn-submit:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 32px rgba(99, 102, 241, 0.35);
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        /* footer link */
+        .auth-footer {
+            text-align: center;
+            margin-top: 1.8rem;
+            color: #94A3B8;
+            font-size: 0.95rem;
+        }
+
+        .auth-footer a {
+            color: #6366F1;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+            border-bottom: 1px solid transparent;
+        }
+
+        .auth-footer a:hover {
+            color: #8B5CF6;
+            border-bottom-color: #8B5CF6;
+        }
+
+        /* floating particles (micro) */
+        .micro-particle {
+            position: fixed;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.08);
+            pointer-events: none;
+            z-index: 0;
+            animation: floatParticle linear infinite;
+        }
+
+        @keyframes floatParticle {
+            0% { transform: translateY(100vh) scale(0.2); opacity: 0; }
+            20% { opacity: 0.4; }
+            80% { opacity: 0.4; }
+            100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+        }
+
+        /* small responsive */
+        @media (max-width: 520px) {
+            .glass-card { padding: 1.8rem 1.2rem; }
+            .auth-header h1 { font-size: 1.6rem; }
+            .input-group input { font-size: 0.9rem; padding: 0.8rem 1rem 0.8rem 0; }
+        }
+
+        @media (max-width: 380px) {
+            .glass-card { padding: 1.2rem 0.8rem; border-radius: 28px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Neural bg canvas -->
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="login-wrapper">
+        <div class="glass-card">
+            <!-- Header -->
+            <div class="auth-header">
+                <div class="logo-icon"><i class="fas fa-brain"></i></div>
+                <h1>Welcome back</h1>
+                <p>Sign in to your RAG.ai workspace</p>
+            </div>
+
+            <!-- Form (preserves all Django fields, names, method, csrf) -->
+            <form method="POST" class="auth-form">
+                {% csrf_token %}
+
+                <!-- Username -->
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" name="username" placeholder="Username" required />
+                </div>
+
+                <!-- Password -->
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="password" placeholder="Password" required />
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-sign-in-alt"></i> Sign in
+                </button>
+            </form>
+
+            <!-- Footer -->
+            <div class="auth-footer">
+                Don't have an account?
+                <a href="{% url 'register' %}">Create account</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Canvas script: neural network background -->
+    <script>
+        (function() {
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let particles = [];
+
+            function resize() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            const NUM = 55;
+            for (let i = 0; i < NUM; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    vx: (Math.random() - 0.5) * 0.35,
+                    vy: (Math.random() - 0.5) * 0.35,
+                    r: Math.random() * 2.2 + 1,
+                    alpha: Math.random() * 0.35 + 0.08,
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, width, height);
+
+                for (let p of particles) {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > width) p.vx *= -1;
+                    if (p.y < 0 || p.y > height) p.vy *= -1;
+                }
+
+                // draw connections
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
+                        if (dist < 130) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(99, 102, 241, ${0.06 * (1 - dist/130)})`;
+                            ctx.lineWidth = 0.7;
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                // draw nodes
+                for (let p of particles) {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(139, 92, 246, ${p.alpha})`;
+                    ctx.shadowColor = '#6366F1';
+                    ctx.shadowBlur = 8;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+    </script>
+
+    <!-- CSS floating micro-particles -->
+    <script>
+        (function() {
+            const container = document.body;
+            for (let i = 0; i < 20; i++) {
+                const el = document.createElement('div');
+                el.className = 'micro-particle';
+                el.style.left = Math.random() * 100 + '%';
+                el.style.animationDuration = (18 + Math.random() * 30) + 's';
+                el.style.animationDelay = (Math.random() * 25) + 's';
+                const size = 2 + Math.random() * 6;
+                el.style.width = size + 'px';
+                el.style.height = size + 'px';
+                el.style.background = `rgba(99, 102, 241, ${0.04 + Math.random() * 0.08})`;
+                container.appendChild(el);
+            }
+        })();
+    </script>
+</body>
+</html>

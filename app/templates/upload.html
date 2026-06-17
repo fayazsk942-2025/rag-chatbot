@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Upload · RAG.ai</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&family=Poppins:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        /* --- RESET & BASE --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0B1020;
+            color: #F8FAFC;
+            font-family: 'Inter', 'Poppins', 'Space Grotesk', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Neural bg canvas */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* main card */
+        .upload-wrapper {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        /* glassmorphism card */
+        .glass-card {
+            background: rgba(11, 16, 32, 0.55);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border-radius: 40px;
+            padding: 2.8rem 2.2rem 2.4rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(99, 102, 241, 0.12);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 40px 80px -20px rgba(99, 102, 241, 0.15), 0 0 0 1px rgba(139, 92, 246, 0.2);
+        }
+
+        /* header */
+        .upload-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .upload-header .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: #94A3B8;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+            margin-bottom: 0.8rem;
+        }
+
+        .upload-header .back-link:hover {
+            color: #6366F1;
+        }
+
+        .upload-header .icon-big {
+            font-size: 3rem;
+            background: linear-gradient(135deg, #6366F1, #8B5CF6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: inline-block;
+            margin-bottom: 0.3rem;
+        }
+
+        .upload-header h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 2rem;
+            letter-spacing: -0.02em;
+            background: linear-gradient(to right, #F8FAFC 60%, #94A3B8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .upload-header p {
+            color: #94A3B8;
+            font-size: 0.95rem;
+            margin-top: 0.3rem;
+        }
+
+        /* upload area */
+        .upload-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        /* drag & drop zone */
+        .drop-zone {
+            width: 100%;
+            padding: 2.5rem 1.5rem;
+            border: 2px dashed rgba(255, 255, 255, 0.08);
+            border-radius: 32px;
+            background: rgba(255, 255, 255, 0.02);
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .drop-zone:hover {
+            border-color: rgba(99, 102, 241, 0.25);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .drop-zone.dragover {
+            border-color: #6366F1;
+            background: rgba(99, 102, 241, 0.05);
+            box-shadow: 0 0 40px rgba(99, 102, 241, 0.05);
+        }
+
+        .drop-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+
+        .drop-zone .drop-icon {
+            font-size: 3rem;
+            color: #6366F1;
+            margin-bottom: 0.8rem;
+            display: block;
+        }
+
+        .drop-zone h3 {
+            font-weight: 500;
+            font-size: 1.1rem;
+            color: #F8FAFC;
+            margin-bottom: 0.3rem;
+        }
+
+        .drop-zone p {
+            color: #64748B;
+            font-size: 0.85rem;
+        }
+
+        .drop-zone .file-types {
+            display: flex;
+            justify-content: center;
+            gap: 0.8rem;
+            margin-top: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .drop-zone .file-types span {
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            font-size: 0.7rem;
+            color: #94A3B8;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        /* file name display */
+        .file-name-display {
+            width: 100%;
+            padding: 0.6rem 1rem;
+            border-radius: 40px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            color: #94A3B8;
+            font-size: 0.9rem;
+            text-align: center;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            transition: all 0.3s ease;
+        }
+
+        .file-name-display.has-file {
+            border-color: rgba(99, 102, 241, 0.2);
+            color: #F8FAFC;
+        }
+
+        .file-name-display i {
+            color: #10B981;
+        }
+
+        /* submit button */
+        .btn-upload {
+            width: 100%;
+            padding: 0.9rem;
+            border: none;
+            border-radius: 40px;
+            background: linear-gradient(145deg, #6366F1, #8B5CF6);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+        }
+
+        .btn-upload:hover:not(:disabled) {
+            transform: scale(1.02);
+            box-shadow: 0 10px 32px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-upload:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .btn-upload:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* floating particles */
+        .micro-particle {
+            position: fixed;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.06);
+            pointer-events: none;
+            z-index: 0;
+            animation: floatParticle linear infinite;
+        }
+
+        @keyframes floatParticle {
+            0% { transform: translateY(100vh) scale(0.2); opacity: 0; }
+            20% { opacity: 0.5; }
+            80% { opacity: 0.5; }
+            100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+        }
+
+        /* responsive */
+        @media (max-width: 520px) {
+            .glass-card { padding: 1.8rem 1.2rem; }
+            .upload-header h1 { font-size: 1.6rem; }
+            .drop-zone { padding: 1.8rem 1rem; }
+            .drop-zone .drop-icon { font-size: 2.2rem; }
+        }
+
+        @media (max-width: 380px) {
+            .glass-card { padding: 1.2rem 0.8rem; border-radius: 28px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Neural bg canvas -->
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="upload-wrapper">
+        <div class="glass-card">
+            <!-- Header -->
+            <div class="upload-header">
+                <a href="{% url 'home' %}" class="back-link">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+                <div class="icon-big"><i class="fas fa-cloud-upload-alt"></i></div>
+                <h1>Upload Document</h1>
+                <p>Upload PDF or DOCX to start chatting with AI</p>
+            </div>
+
+            <!-- Upload Form -->
+            <form method="POST" enctype="multipart/form-data" class="upload-area" id="uploadForm">
+                {% csrf_token %}
+
+                <!-- Drop zone -->
+                <div class="drop-zone" id="dropZone">
+                    <input type="file" name="document" id="fileInput" required accept=".pdf,.docx,.doc" />
+                    <span class="drop-icon"><i class="fas fa-file-upload"></i></span>
+                    <h3>Drop your document here</h3>
+                    <p>or click to browse</p>
+                    <div class="file-types">
+                        <span>PDF</span>
+                        <span>DOCX</span>
+                        <span>DOC</span>
+                    </div>
+                </div>
+
+                <!-- File name display -->
+                <div class="file-name-display" id="fileNameDisplay">
+                    <i class="fas fa-file"></i> No file selected
+                </div>
+
+                <button type="submit" class="btn-upload" id="submitBtn" disabled>
+                    <i class="fas fa-upload"></i> Upload & Process
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Canvas Neural Network Script -->
+    <script>
+        (function() {
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let particles = [];
+
+            function resize() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            const NUM = 55;
+            for (let i = 0; i < NUM; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    vx: (Math.random() - 0.5) * 0.35,
+                    vy: (Math.random() - 0.5) * 0.35,
+                    r: Math.random() * 2.2 + 1,
+                    alpha: Math.random() * 0.3 + 0.06,
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, width, height);
+
+                for (let p of particles) {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > width) p.vx *= -1;
+                    if (p.y < 0 || p.y > height) p.vy *= -1;
+                }
+
+                // connections
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
+                        if (dist < 130) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(99, 102, 241, ${0.06 * (1 - dist/130)})`;
+                            ctx.lineWidth = 0.7;
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                // nodes
+                for (let p of particles) {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(139, 92, 246, ${p.alpha})`;
+                    ctx.shadowColor = '#6366F1';
+                    ctx.shadowBlur = 8;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+    </script>
+
+    <!-- Floating micro-particles -->
+    <script>
+        (function() {
+            const container = document.body;
+            for (let i = 0; i < 20; i++) {
+                const el = document.createElement('div');
+                el.className = 'micro-particle';
+                el.style.left = Math.random() * 100 + '%';
+                el.style.animationDuration = (18 + Math.random() * 30) + 's';
+                el.style.animationDelay = (Math.random() * 25) + 's';
+                const size = 2 + Math.random() * 6;
+                el.style.width = size + 'px';
+                el.style.height = size + 'px';
+                el.style.background = `rgba(99, 102, 241, ${0.04 + Math.random() * 0.06})`;
+                container.appendChild(el);
+            }
+        })();
+    </script>
+
+    <!-- File input handler -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('fileInput');
+            const fileNameDisplay = document.getElementById('fileNameDisplay');
+            const submitBtn = document.getElementById('submitBtn');
+            const dropZone = document.getElementById('dropZone');
+
+            function updateFileDisplay() {
+                if (fileInput.files && fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                    fileNameDisplay.innerHTML = `<i class="fas fa-check-circle"></i> ${file.name} (${fileSize} MB)`;
+                    fileNameDisplay.className = 'file-name-display has-file';
+                    submitBtn.disabled = false;
+                } else {
+                    fileNameDisplay.innerHTML = `<i class="fas fa-file"></i> No file selected`;
+                    fileNameDisplay.className = 'file-name-display';
+                    submitBtn.disabled = true;
+                }
+            }
+
+            fileInput.addEventListener('change', updateFileDisplay);
+
+            // Drag and drop visual feedback
+            dropZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('dragover');
+            });
+
+            dropZone.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+            });
+
+            dropZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) {
+                    fileInput.files = e.dataTransfer.files;
+                    updateFileDisplay();
+                }
+            });
+
+            // Reset if form is submitted (optional)
+            // But we keep it simple
+        });
+    </script>
+</body>
+</html>

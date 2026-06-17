@@ -1,0 +1,17 @@
+Dear Hiring Manager,
+
+I hope you are doing well.
+
+My name is Fayaz Sk, and I am writing to apply for the Software Developer / Python Developer position at your company. I have strong knowledge in Python, Flask, Machine Learning, and AI-based application development, along with hands-on experience in building real-time projects.
+
+I completed a 3-month internship focused on Machine Learning and AI application development using Python. During the internship, I developed an Emotion Based Music Recommendation System and gained practical experience in data preprocessing, model training, testing, and AI project development.
+
+Currently, I am improving my skills in full-stack development and working on real-world projects to strengthen my problem-solving and development abilities. I am highly interested in contributing my technical skills and learning from your team.
+
+I have attached my resume for your reference. I would be grateful for an opportunity to discuss how my skills and enthusiasm can contribute to your organization.
+
+Thank you for your time and consideration. I look forward to hearing from you.
+
+Best Regards,
+Fayaz Sk
+GitHub: https://github.com/fayazsk942-2025

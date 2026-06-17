@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Share Conversation</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Inter',sans-serif;
+}
+
+body{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    background:
+    radial-gradient(circle at top left,#8b5cf620,transparent 40%),
+    radial-gradient(circle at bottom right,#6366f120,transparent 40%),
+    #0b1020;
+
+    color:white;
+}
+
+.share-card{
+    width:500px;
+    max-width:90%;
+    padding:40px;
+
+    background:rgba(255,255,255,0.05);
+    backdrop-filter:blur(20px);
+
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:24px;
+
+    box-shadow:0 20px 60px rgba(0,0,0,.4);
+
+    text-align:center;
+}
+
+.icon{
+    width:80px;
+    height:80px;
+    margin:auto;
+    border-radius:50%;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    background:linear-gradient(135deg,#6366F1,#8B5CF6);
+
+    font-size:35px;
+    margin-bottom:20px;
+}
+
+h1{
+    margin-bottom:10px;
+    font-size:28px;
+}
+
+.subtitle{
+    color:#94A3B8;
+    margin-bottom:30px;
+}
+
+.link-box{
+    display:flex;
+    align-items:center;
+
+    background:#111827;
+
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:14px;
+
+    overflow:hidden;
+}
+
+.link-box input{
+    flex:1;
+    border:none;
+    background:none;
+    color:white;
+    padding:15px;
+    outline:none;
+}
+
+.copy-btn{
+    border:none;
+    cursor:pointer;
+
+    padding:15px 25px;
+
+    background:linear-gradient(135deg,#6366F1,#8B5CF6);
+    color:white;
+    font-weight:600;
+}
+
+.copy-btn:hover{
+    opacity:.9;
+}
+
+.success{
+    margin-top:15px;
+    color:#22C55E;
+    display:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="share-card">
+
+    <div class="icon">🔗</div>
+
+    <h1>Share Conversation</h1>
+
+    <p class="subtitle">
+        Anyone with this link can view this conversation.
+    </p>
+
+    <div class="link-box">
+        <input
+            id="shareLink"
+            value="{{ share_url }}"
+            readonly
+        >
+
+        <button class="copy-btn"
+                onclick="copyLink()">
+            Copy
+        </button>
+    </div>
+
+    <div class="success" id="successMsg">
+        Link copied successfully!
+    </div>
+
+</div>
+
+<script>
+function copyLink(){
+
+    const link =
+    document.getElementById("shareLink");
+
+    navigator.clipboard.writeText(link.value);
+
+    document.getElementById("successMsg")
+        .style.display="block";
+}
+</script>
+
+</body>
+</html>
