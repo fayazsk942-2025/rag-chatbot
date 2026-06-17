@@ -1,21 +1,27 @@
 # Python
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
 
-# Virtual env
-venv/
+# Virtual environments
 env/
+venv/
+ragi/
 
-# Django
+# Database
 db.sqlite3
+
+# Environment variables
+.env
+
+# Uploaded files
 media/
+
+# FAISS indexes
+faiss_indexes/
+
+# Static build output
 staticfiles/
 
 # IDE
 .vscode/
 .idea/
-
-# OS
-.DS_Store

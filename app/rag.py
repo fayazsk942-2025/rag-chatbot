@@ -7,26 +7,6 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_google_genai import ChatGoogleGenerativeAI
-
-load_dotenv()
-
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-
-if not GOOGLE_API_KEY:
-    raise ValueError(
-        "GOOGLE_API_KEY not found in .env file"
-    )
-
-
-embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
-)
-
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash",
-    temperature=0
-)
-
 import os
 
 from langchain_community.document_loaders import (
@@ -42,6 +22,43 @@ from langchain_text_splitters import (
 from langchain_community.vectorstores import (
     FAISS
 )
+
+
+load_dotenv()
+
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
+if not GOOGLE_API_KEY:
+    print("WARNING: GOOGLE_API_KEY not found")
+
+
+_embeddings = None
+_llm = None
+
+
+def get_embeddings():
+    global _embeddings
+
+    if _embeddings is None:
+        _embeddings = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-MiniLM-L6-v2"
+        )
+
+    return _embeddings
+
+
+def get_llm():
+    global _llm
+
+    if _llm is None:
+        _llm = ChatGoogleGenerativeAI(
+            model="gemini-2.5-flash",
+            temperature=0
+        )
+
+    return _llm
+
+
 
 # embeddings should already exist
 # embeddings = GoogleGenerativeAIEmbeddings(...)
@@ -85,9 +102,9 @@ def process_document(file_path, document_id):
     )
 
     vectorstore = FAISS.from_documents(
-        chunks,
-        embeddings
-    )
+    chunks,
+    get_embeddings()
+)
 
     save_path = (
         f"faiss_indexes/document_{document_id}"
@@ -121,11 +138,11 @@ def ask_question(question, document_id):
         )
 
     vectorstore = FAISS.load_local(
-        faiss_path,
-        embeddings,
-        allow_dangerous_deserialization=True
-    )
-
+    faiss_path,
+    get_embeddings(),
+    allow_dangerous_deserialization=True
+)
+    
     retriever = vectorstore.as_retriever(
         search_kwargs={"k": 4}
     )
@@ -158,8 +175,6 @@ Question:
 Answer:
 """
 
-    response = llm.invoke(
-        prompt
-    )
+    response = get_llm().invoke(prompt)
 
     return response.content

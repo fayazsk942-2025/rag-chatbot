@@ -9,6 +9,11 @@ from .rag import (
     process_document,
     ask_question
 )
+from django.shortcuts import render, get_object_or_404
+from django.urls import reverse
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
+from .models import ChatSession, ChatMessage
 
 import os
 
@@ -327,11 +332,6 @@ def delete_chat(request, chat_id):
 
     return redirect("upload")
 
-from django.shortcuts import render, get_object_or_404
-from django.urls import reverse
-from django.shortcuts import get_object_or_404, render
-from django.urls import reverse
-from .models import ChatSession, ChatMessage
 
 
 def share_chat(request, chat_id):
