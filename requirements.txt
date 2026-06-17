@@ -1,0 +1,14 @@
+Django==5.2.9
+gunicorn
+whitenoise
+python-dotenv
+pypdf
+python-docx
+faiss-cpu
+numpy
+pandas
+requests
+langchain
+langchain-community
+langchain-google-genai
+sentence-transformers
